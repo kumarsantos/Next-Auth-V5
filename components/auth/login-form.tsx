@@ -19,8 +19,16 @@ import { FormSuccess } from "../form-success";
 import { login } from "@/app/actions/login";
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export const LoginForm = () => {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+  const urlError =
+    searchParams.get("error") === "OAuthAccountNotLinked"
+      ? "Email already in use"
+      : "";
+
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | undefined>("");
   const [successMessage, setSuccessMessage] = useState<string | undefined>("");
@@ -40,7 +48,9 @@ export const LoginForm = () => {
     setSuccessMessage("");
     setShowTwoFactor(false);
     startTransition(() => {
-      login(value)
+      ///callback url is for redicting to last active page
+      //form middleware
+      login(value, callbackUrl)
         .then((data) => {
           if (data?.error) {
             form.reset();
@@ -136,7 +146,7 @@ export const LoginForm = () => {
             )}
           </div>
           <FormSuccess message={successMessage} />
-          <FormError message={errorMessage} />
+          <FormError message={urlError || errorMessage} />
           <Button disabled={isPending} type="submit" className="w-full">
             {isPending ? "Loading..." : !showTwoFactor ? "Login" : "Confirm"}
           </Button>
